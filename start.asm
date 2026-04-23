@@ -1,5 +1,4 @@
 .data
-    text: .ascii "Hi"
 .text
 .global _start
 
@@ -25,7 +24,17 @@ in_el2:
     eret // Jump
 
 el1:
-    b el1 // Infinite loop
+    ldr x0, =0x09000000 // Load UART address
+    ldr x1, =0x09000018 // Get the flag register
+    and x1, x1, #0x20 // Get the fifth bt
+    cmp x1, #0 // Are we ready?
+    beq ready_print // PRINT IT
+    b el1 // Wait
+
+ready_print:
+    mov w2, #0x48 // Put 'H' in a register
+    ldr x0, =0x09000000 // Put UART address in a register
+    str w2, [x0] // Store w2 into the address pointed to by x0
 
 in_el3:
     adr x0, in_el2 // Address of in_el2
