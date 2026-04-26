@@ -24,15 +24,38 @@ in_el2:
     eret // Jump
 
 el1:
-    ldr x0, =0x09000000 // Load UART address
-    ldr x1, =0x09000018 // Get the flag register
-    and x1, x1, #0x20 // Get the fifth bt
-    cmp x1, #0 // Are we ready?
-    beq ready_print // PRINT IT
-    b el1 // Wait
+    ldr x10, =0x09000018 // Keep Flag Register address in x10
+    ldr x11, =0x09000000 // Keep Data Register address in x11
+    b input // Jump to input
+
+input:
+    ldr w2, [x10] // Read the value of the address
+    tbnz w2, #4, input // Check the 4th bit, if it's not zero, try again
+    ldr w0, [x11] // Get the byte
+    cmp w0, #0x0D // Is it Enter?
+    beq print_enter_1
+    b print
+
+print_enter_1:
+    ldr w2, [x10] // Read the flag
+    tbnz w2, #5, print_enter_1 // Check 5th bit, in case zero then loop
+    str w0, [x11] // Write the char to UART
+    mov w0, #0x0A
+    b print_enter_2
+
+print_enter_2:
+    ldr w2, [x10] // Read the flag
+    tbnz w2, #5, print_enter_2 // Check 5th bit, in case zero then loop
+    str w0, [x11] // Write the char to UART
+    b input
+
+print:
+    ldr w2, [x10] // Read the flag
+    tbnz w2, #5, print // Check 5th bit, in case zero then loop
+    str w0, [x11] // Write the char to UART
+    b input
 
 ready_print:
-    mov w2, #0x48 // Put 'H' in a register
     ldr x0, =0x09000000 // Put UART address in a register
     str w2, [x0] // Store w2 into the address pointed to by x0
 
