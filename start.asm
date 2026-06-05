@@ -1,10 +1,11 @@
 .data
 .text
 .global _start
+.section .text.boot
 
 _start:
     mrs x0, CurrentEL // Get current EL level
-    ldr x1, =stack_end // Set the pos of the stack
+    ldr x1, =stack_top // Set the pos of the stack
     mov sp, x1 // Set the pointer
     cmp x0, #0b1000 // Is it El2?
 
@@ -68,8 +69,3 @@ in_el3:
     msr SPSR_EL3, x0 // Write to SPSR_EL3
 
     eret // Jump
-
-stack_begin:
-    .space 4096
-
-stack_end:
